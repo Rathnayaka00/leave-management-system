@@ -9,6 +9,9 @@ class UserCreate(BaseModel):
     last_name: str
     sex: str
 
+    class Config:
+        from_attributes = True 
+
 class UserResponse(BaseModel):
     username: str
     email: EmailStr
@@ -17,7 +20,7 @@ class UserResponse(BaseModel):
     sex: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
