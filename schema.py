@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import date
 
 class UserCreate(BaseModel):
     username: str
@@ -28,3 +29,33 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+class LeaveCreate(BaseModel):
+    leave_start_date: date
+    leave_day_count: int
+    leave_type: str
+    reason: str
+
+class LeaveResponse(BaseModel):
+    id: int
+    leave_start_date: date
+    leave_day_count: int
+    leave_type: str
+    reason: str
+    status: str
+    username: str
+
+    class Config:
+        from_attributes = True
+
+class LeaveResponse(BaseModel):
+    id: int
+    leave_start_date: date
+    leave_day_count: int
+    leave_type: str
+    reason: str
+    status: str
+    username: str
+
+    class Config:
+        from_attributes = True
