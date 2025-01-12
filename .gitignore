@@ -1,0 +1,66 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+*.out
+*.err
+
+# Cache
+*.cache
+*.coverage
+.cache/
+coverage/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.tox/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+
+# Compiled C extensions
+*.so
+
+# Chroma Vectorstore
+vectorstore_data/
+
+# Generated output
+*.json
+*.txt
+
+# Other backups
+*.tar.gz
+*.zip
+*.egg-info/
+dist/
+build/
