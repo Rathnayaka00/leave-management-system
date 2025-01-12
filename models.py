@@ -12,6 +12,19 @@ class User(Base):
     last_name = Column(String)
     sex = Column(Boolean)
 
+    leave_counts = relationship("RemainingLeaveCount", back_populates="user", uselist=False)
+
+class RemainingLeaveCount(Base):
+    __tablename__ = "remaining_leave_counts"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    sick_leaves = Column(Integer, default=10)
+    casual_leaves = Column(Integer, default=30)
+    annual_leaves = Column(Integer, default=14)
+    other_leaves = Column(Integer, default=30)
+
+    user = relationship("User", back_populates="leave_counts")
+
 class Leave(Base):
     __tablename__ = "leaves"
     id = Column(Integer, primary_key=True, index=True)
@@ -19,7 +32,7 @@ class Leave(Base):
     leave_day_count = Column(Integer, nullable=False)
     leave_type = Column(String, nullable=False)
     reason = Column(String, nullable=False)
-    status = Column(String, default="Pending")  # e.g., Pending, Approved, Rejected
+    status = Column(String, default="Pending")
     user_id = Column(Integer, ForeignKey("users.id"))
     username = Column(String, nullable=False)
 

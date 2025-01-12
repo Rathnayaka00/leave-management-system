@@ -48,14 +48,11 @@ class LeaveResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class LeaveResponse(BaseModel):
-    id: int
-    leave_start_date: date
-    leave_day_count: int
-    leave_type: str
-    reason: str
-    status: str
-    username: str
+class RemainingLeaveCountResponse(BaseModel):
+    sick_leaves: int
+    casual_leaves: int
+    annual_leaves: int
+    other_leaves: int
 
     class Config:
         from_attributes = True
