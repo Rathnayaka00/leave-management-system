@@ -13,18 +13,22 @@ if not openai_api_key:
 
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-loader = PyPDFLoader("D:/Projects/RAG Assignment/resources/leave.pdf")  
-docs = loader.load()
+def vectorize_pdf(file_path: str):
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)
-splits = text_splitter.split_documents(docs)
+    try:
+        loader = PyPDFLoader(file_path)  
+        docs = loader.load()
 
-embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
-vectorstore = Chroma.from_documents(documents=splits, embedding=embedding_model)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)
+        splits = text_splitter.split_documents(docs)
 
-persist_directory = "vectorstore_data"
+        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+        vectorstore = Chroma.from_documents(documents=splits, embedding=embedding_model)
 
-vectorstore.persist()  
-vectorstore = Chroma(persist_directory=persist_directory)  
+        persist_directory = "vectorstore_data"
+        vectorstore.persist()  
+        vectorstore = Chroma(persist_directory=persist_directory)
 
-print("Vectorstore created and saved successfully!")
+        return "Vectorstore created and saved successfully!"
+    except Exception as e:
+        raise Exception(f"Error during vectorization: {str(e)}")

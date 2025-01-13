@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 from schema import UserCreate, Token, UserResponse, LeaveCreate, LeaveResponse, RemainingLeaveCountResponse
@@ -6,9 +6,12 @@ from services import get_password_hash, create_access_token, get_user, verify_pa
 from utils import get_current_user
 from models import User, Leave, RemainingLeaveCount
 from database import get_db
+from fastapi.responses import JSONResponse
 from typing import List
 from rag_handler import handle_request 
 import json
+from vector_setup import vectorize_pdf
+from pathlib import Path
 
 router = APIRouter()
 
@@ -152,3 +155,22 @@ async def get_user_leaves(
     if not leaves:
         raise HTTPException(status_code=404, detail="No leave requests found for this user.")
     return leaves
+
+@router.post("/upload-policy-pdf/")
+async def upload_pdf(file: UploadFile = File(...)):
+    try:
+        if not file.filename.endswith(".pdf"):
+            raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+        
+        file_path = Path(f"temp_{file.filename}")
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+
+        result = vectorize_pdf(str(file_path))
+
+        file_path.unlink()
+
+        return JSONResponse(content={"message": result})
+
+    except Exception as e:
+        return HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
