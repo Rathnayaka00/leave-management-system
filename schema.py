@@ -44,6 +44,7 @@ class LeaveResponse(BaseModel):
     reason: str
     status: str
     username: str
+    explanation: Optional[str]  # Include explanation
 
     class Config:
         from_attributes = True
