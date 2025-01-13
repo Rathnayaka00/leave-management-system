@@ -33,7 +33,7 @@ class Leave(Base):
     leave_type = Column(String, nullable=False)
     reason = Column(String, nullable=False)
     status = Column(String, default="Pending")
-    explanation = Column(String)  # New column for storing RAG explanation
+    explanation = Column(String)  
     user_id = Column(Integer, ForeignKey("users.id"))
     username = Column(String, nullable=False)
 

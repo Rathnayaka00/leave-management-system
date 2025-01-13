@@ -54,24 +54,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/users/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
 
 @router.post("/leave/request", response_model=LeaveResponse)
 async def request_leave(
-    leave_data: LeaveCreate,
-    db: Session = Depends(get_db),
+    leave_data: LeaveCreate, 
+    db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    # Get RAG response
     rag_response = json.loads(handle_request(leave_data.reason))
-    binary_result = rag_response.get("output", "0")
+    status = "Approved" if rag_response.get("output") == "1" else "Rejected"
     explanation = rag_response.get("explanation", "No explanation provided.")
-
-    # Determine leave status based on RAG output
-    status = "Approved" if binary_result == "1" else "Rejected"
 
     new_leave = Leave(
         user_id=current_user.id,
@@ -81,71 +73,53 @@ async def request_leave(
         leave_type=leave_data.leave_type,
         reason=leave_data.reason,
         status=status,
-        explanation=explanation  # Store the explanation
+        explanation=explanation
     )
     db.add(new_leave)
     db.commit()
     db.refresh(new_leave)
+
+    if status == "Approved":
+        await update_remaining_leaves_auto(new_leave.id, db, current_user)
+
     return new_leave
 
-
-@router.post("/leave/update")
-async def update_remaining_leaves(
-    leave_id: int, 
-    db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user)
-):
+async def update_remaining_leaves_auto(leave_id: int, db: Session, current_user: User):
     leave = db.query(Leave).filter(Leave.id == leave_id, Leave.user_id == current_user.id).first()
     if not leave:
         raise HTTPException(status_code=404, detail="Leave request not found.")
     if leave.status != "Approved":
-        raise HTTPException(status_code=400, detail="Leave request is not approved.")
-    
+        return 
 
     leave_counts = db.query(RemainingLeaveCount).filter(RemainingLeaveCount.user_id == current_user.id).first()
     if not leave_counts:
         raise HTTPException(status_code=404, detail="Leave counts not found for this user.")
     
     if leave.leave_type == "Sick":
-        if leave_counts.sick_leaves < leave.leave_day_count:
+        if leave_counts.sick_leaves >= leave.leave_day_count:
+            leave_counts.sick_leaves -= leave.leave_day_count
+        else:
             raise HTTPException(status_code=400, detail="Not enough Sick leaves.")
-        leave_counts.sick_leaves -= leave.leave_day_count
     elif leave.leave_type == "Casual":
-        if leave_counts.casual_leaves < leave.leave_day_count:
+        if leave_counts.casual_leaves >= leave.leave_day_count:
+            leave_counts.casual_leaves -= leave.leave_day_count
+        else:
             raise HTTPException(status_code=400, detail="Not enough Casual leaves.")
-        leave_counts.casual_leaves -= leave.leave_day_count
     elif leave.leave_type == "Annual":
-        if leave_counts.annual_leaves < leave.leave_day_count:
+        if leave_counts.annual_leaves >= leave.leave_day_count:
+            leave_counts.annual_leaves -= leave.leave_day_count
+        else:
             raise HTTPException(status_code=400, detail="Not enough Annual leaves.")
-        leave_counts.annual_leaves -= leave.leave_day_count
     elif leave.leave_type == "Other":
-        if leave_counts.other_leaves < leave.leave_day_count:
+        if leave_counts.other_leaves >= leave.leave_day_count:
+            leave_counts.other_leaves -= leave.leave_day_count
+        else:
             raise HTTPException(status_code=400, detail="Not enough Other leaves.")
-        leave_counts.other_leaves -= leave.leave_day_count
     else:
         raise HTTPException(status_code=400, detail="Invalid leave type.")
 
     db.commit()
-    return {"message": "Remaining leave count updated successfully."}
 
-@router.get("/remaining-leaves/{user_id}", status_code=status.HTTP_200_OK)
-def get_remaining_leaves(user_id: int, db: Session = Depends(get_db)):
-    leave_counts = db.query(RemainingLeaveCount).filter(RemainingLeaveCount.user_id == user_id).first()
-
-    if not leave_counts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Leave counts not found for user_id {user_id}"
-        )
-
-    return {
-        "user_id": leave_counts.user_id,
-        "username": leave_counts.username,
-        "sick_leaves": leave_counts.sick_leaves,
-        "casual_leaves": leave_counts.casual_leaves,
-        "annual_leaves": leave_counts.annual_leaves,
-        "other_leaves": leave_counts.other_leaves,
-    }
 
 @router.get("/leave-counts", status_code=status.HTTP_200_OK)
 async def get_remaining_leave_counts(
