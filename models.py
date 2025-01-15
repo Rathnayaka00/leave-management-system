@@ -16,9 +16,9 @@ class User(Base):
     leave_counts = relationship("RemainingLeaveCount", back_populates="user", uselist=False)
 
     __table_args__ = (
-        CheckConstraint("char_length(username) >= 3", name="username_min_length"),
-        CheckConstraint("char_length(first_name) > 0", name="first_name_non_empty"),
-        CheckConstraint("char_length(last_name) > 0", name="last_name_non_empty"),
+        CheckConstraint("length(username) >= 3", name="username_min_length"),
+        CheckConstraint("length(first_name) > 0", name="first_name_non_empty"),
+        CheckConstraint("length(last_name) > 0", name="last_name_non_empty"),
     )
 
 class RemainingLeaveCount(Base):
@@ -55,7 +55,6 @@ class Leave(Base):
 
     user = relationship("User")
 
-    # Constraints for data validation
     __table_args__ = (
         CheckConstraint("leave_day_count > 0", name="leave_day_count_positive"),
         CheckConstraint(
