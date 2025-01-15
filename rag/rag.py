@@ -84,7 +84,7 @@ def handle_request(rag_chain, leave_request):
 
 if __name__ == "__main__":
     # Only executes if the script is run directly
-    pdf_path = "resources/leave.pdf"  # Update the path as needed
+    pdf_path = "D:/Projects/RAG Assignment/resources/leave.pdf"  # Update the path as needed
     leave_request = "I face an accident."
 
     # Initialize the pipeline
