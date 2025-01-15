@@ -210,7 +210,6 @@ async def get_user_leaves(
         return []
     return leaves
     
-
 @router.post("/upload-policy-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
